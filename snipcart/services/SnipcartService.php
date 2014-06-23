@@ -5,7 +5,6 @@ namespace Craft;
 class SnipcartService extends BaseApplicationComponent
 {
 
-	protected $_snipcart;
 	protected $_snipcartUrl;
 	protected $_settings;
 	protected $_isLinked;
@@ -14,9 +13,10 @@ class SnipcartService extends BaseApplicationComponent
 	 * Constructor
 	 */
 	
-	public function __construct($snipcart = null)
+	public function init()
 	{
-		$this->_snipcart    = $snipcart;
+		parent::init();
+		
 		$this->_settings    = craft()->plugins->getPlugin('snipcart')->getSettings();
 		$this->_snipcartUrl = 'https://app.snipcart.com/api/';
 		$this->_isLinked    = isset($this->_settings->apiKey) && ! empty($this->_snipcartUrl);
