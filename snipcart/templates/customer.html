@@ -1,0 +1,87 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set centered = true %}
+{% set customer = craft.snipcart.getCustomer(customerId) %}
+{% set orders = craft.snipcart.getCustomerOrders(customerId) %}
+{% set title = "Snipcart Customer "~customer.email|t %}
+
+{% set selectedTab = 'customers' %}
+
+{% set tabs = {
+	orders: { label: "Orders"|t, url: url('snipcart') },
+	customers: { label: "Customers"|t, url: url('snipcart/customers') },
+	discounts: { label: "Discounts"|t, url: url('snipcart/discounts') },
+} %}
+
+
+{% set content %}
+
+	<input type="hidden" name="customer_id" value="{{ customer.id }}">
+
+	<table cellspacing="0" cellpadding="0" border="0" width="100%">
+		<tr valign="top">
+			<td style="vertical-align: top;">
+
+				<h3>Billing</h3>
+
+				<p><a href="mailto:{{ customer.email }}">{{ customer.email }}</a></p>
+
+				<p>
+					{% if customer.billingAddressName %}{{ customer.billingAddressName }}<br>{% endif %}
+					{% if customer.billingAddressCompanyName %}{{ customer.billingAddressCompanyName }}<br>{% endif %}
+					{{ customer.billingAddressAddress1 }}<br>
+					{% if customer.billingAddressAddress2 %}{{ customer.billingAddressAddress2 }}<br>{% endif %}
+					{{ customer.billingAddressCity }}, {{ customer.billingAddressProvince }} {{ customer.billingAddressPostalCode }}<br>
+					{% if customer.billingAddressPhone %}{{ customer.billingAddressPhone }}{% endif %}
+				</p>
+
+			</td>
+			<td style="vertical-align: top;">
+				
+				<h3>Shipping{% if customer.shippingAddressSameAsBilling %} (same as billing){% endif %}</h3>
+
+				<p>
+					{% if customer.shippingAddressName %}{{ customer.shippingAddressName }}<br>{% endif %}
+					{% if customer.shippingAddressCompanyName %}{{ customer.shippingAddressCompanyName }}<br>{% endif %}
+					{{ customer.shippingAddressAddress1 }}<br>
+					{% if customer.shippingAddressAddress2 %}{{ customer.shippingAddressAddress2 }}<br>{% endif %}
+					{{ customer.shippingAddressCity }}, {{ customer.shippingAddressProvince }} {{ customer.shippingAddressPostalCode }}<br>
+					{{ customer.shippingAddressPhone }}
+				</p>
+
+			</td>
+			<td style="vertical-align: top;">
+				
+				<h3>Orders</h3>
+
+				<p>{{ customer.statistics.ordersCount }} order{% if customer.statistics.ordersCount != 1 %}s{% endif %}, ${{ customer.statistics.ordersAmount | number_format(2) }} spent</p>
+
+				<table class="data" style="width: 100%">
+					<thead>
+						<th>Invoice</th>
+						<th>Date</th>
+						<th>Amount</th>
+					</thead>
+					<tbody>					
+						{% for order in orders %}
+						<tr>
+							<td>
+								<a href="{{ url('snipcart/order/'~order.token) }}">{{ order.invoiceNumber }}</a>
+							</td>
+							<td>
+								{{ order.creationDate | date('n/j/Y') }}
+							</td>
+							<td>
+								${{ order.finalGrandTotal | number_format(2) }}
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+
+			</td>
+		</tr>
+	</table>
+
+{% endset %}

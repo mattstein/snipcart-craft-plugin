@@ -1,0 +1,72 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+{% set centered = true %}
+{% set title = "Snipcart Customers"|t %}
+
+{% set discounts = craft.snipcart.listDiscounts() %}
+
+{% set selectedTab = 'discounts' %}
+
+{% set tabs = {
+	orders: { label: "Orders"|t, url: url('snipcart') },
+	customers: { label: "Customers"|t, url: url('snipcart/customers') },
+	discounts: { label: "Discounts"|t, url: url('snipcart/discounts') },
+} %}
+
+{% set content %}
+
+	{% if craft.snipcart.isLinked %}
+
+	<p id="noredirects"{% if discounts|length %} class="hidden"{% endif %}>
+		{{ "There aren't any discounts yet."|t }}
+	</p>
+
+	{% else %}
+
+	<p>
+		{{ "Add your Snipcart Private API Key in the plugin settings."|t }}
+	</p>
+
+	{% endif %}
+
+	{% if discounts|length %}
+
+		<table id="discounts" class="data" style="width: 100%;">
+			<thead>
+				<th scope="col">{{ "Name"|t }}</th>
+				<th scope="col">{{ "Trigger"|t }}</th>
+				<th scope="col">{{ "Code"|t }}</th>
+				<th scope="col">{{ "Type"|t }}</th>
+				<th scope="col">{{ "Rate"|t }}</th>
+				<th scope="col">{{ "Amount"|t }}</th>
+				<th scope="col">{{ "Uses"|t }}</th>
+			</thead>
+			<tbody>
+				{% for discount in discounts %}
+					<tr data-id="{{ discount.id }}" data-name="{{ discount.id }}">
+						<td>{{ discount.name }}</td>
+						<td>{{ discount.trigger }}</td>
+						<td>{{ discount.code }}</td>
+						<td>{{ discount.type }}</td>
+						<td>{{ discount.rate }}</td>
+						<td>{{ discount.amount }}</td>
+						<td>{{ discount.numberOfUsages }} / {{ discount.maxNumberOfUsages }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		{#
+			{{ discount.totalToReach }}
+			{{ discount.alternatePrice }}
+			{{ discount.alternatePrice }}
+			{{ discount.expires }}
+			{{ discount.numberOfUsagesUncompleted }}
+			{{ discount.shippingDescription }}
+			{{ discount.shippingCost }}
+			{{ discount.shippingGuaranteedDaysToDelivery }}
+		#}
+
+	{% endif %}
+
+{% endset %}

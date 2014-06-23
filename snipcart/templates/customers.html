@@ -1,0 +1,66 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+{% set centered = true %}
+{% set title = "Snipcart Customers"|t %}
+
+{% if pageNumber is not defined %}
+	{% set pageNumber = 1 %}
+{% endif %}
+
+{% set customers = craft.snipcart.listCustomers(pageNumber) %}
+
+{% set selectedTab = 'customers' %}
+
+{% set tabs = {
+	orders: { label: "Orders"|t, url: url('snipcart') },
+	customers: { label: "Customers"|t, url: url('snipcart/customers') },
+	discounts: { label: "Discounts"|t, url: url('snipcart/discounts') },
+} %}
+
+{% set content %}
+
+	{% if craft.snipcart.isLinked %}
+
+	<p id="noredirects"{% if customers|length %} class="hidden"{% endif %}>
+		{{ "There aren't any customers with accounts yet."|t }}
+	</p>
+
+	{% else %}
+
+	<p>
+		{{ "Add your Snipcart Private API Key in the plugin settings."|t }}
+	</p>
+
+	{% endif %}
+
+	{% if customers|length %}
+
+		<table id="orders" class="data" style="width: 100%;">
+			<thead>
+				<th scope="col">{{ "Email"|t }}</th>
+				<th scope="col">{{ "Billing Address"|t }}</th>
+				<th scope="col">{{ "Shipping Address"|t }}</th>
+				<th scope="col">{{ "Orders"|t }}</th>
+				<th scope="col">{{ "Total Spent"|t }}</th>
+			</thead>
+			<tbody>
+				{% for customer in customers.items %}
+					<tr data-id="{{ customer.id }}" data-name="{{ customer.id }}">
+						<td><a href="{{ url('snipcart/customer/'~customer.id) }}">{{ customer.email }}</a></td>
+						<td>{{ customer.billingAddressAddress1 }}</td>
+						<td>{{ customer.shippingAddressAddress1 }}</td>
+						<td>{{ customer.statistics.ordersCount }}</td>
+						<td>${{ customer.statistics.ordersAmount | number_format(2) }}</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		{% set totalPages = (customers.totalItems / customers.limit) | round(0,'ceil') %}
+		{% set maxVisible = 10 %}
+
+		{% include "snipcart/pagination" with { currentPage: pageNumber, totalPages: totalPages, maxVisible: maxVisible, path: 'snipcart/customers/' } %}
+
+	{% endif %}
+
+{% endset %}

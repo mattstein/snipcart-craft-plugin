@@ -1,0 +1,81 @@
+{% if totalPages > 1 %}
+{% set maxVisible = 3 %}
+{% set nearbyLimit = 2 %}
+
+<div class="pagination">
+	{% if currentPage > 1 %}
+		<a href="{{ url(path ~ (currentPage - 1)) }}">
+			{{ "Previous" | t }}
+		</a>
+	{% endif %}
+
+	{% for i in range(1, maxVisible) %}
+		{% if ( i < currentPage - nearbyLimit ) %}
+			<a href="{{ url(path ~ i) }}">
+				{{ i }}
+			</a>
+		{% endif %}
+	{% endfor %}
+
+	{% if maxVisible + 1 < currentPage - nearbyLimit %}
+		<span class="sep-dots">...</span>
+	{% endif %}
+
+	{% for i in range(currentPage - nearbyLimit, currentPage - 1) %}
+		{% if ( i > 0 ) %}
+			<a href="{{ url(path ~ i) }}">
+				{{ i }}
+			</a>
+		{% endif %}
+	{% endfor %}
+
+	<a href="{{ url(path ~ currentPage) }}" class="active">
+		{{ currentPage }}
+	</a>
+
+	{% if currentPage < totalPages %}
+		{% for i in range(currentPage + 1, totalPages) %}
+			{% if ( loop.index <= nearbyLimit and i <= totalPages ) %}
+				<a href="{{ url(path ~ i) }}">
+					{{ i }}
+				</a>
+			{% endif %}
+		{% endfor %}
+
+		{% if (totalPages - maxVisible) > (currentPage + nearbyLimit ) %}
+			<span class="sep-dots">...</span>
+		{% endif %}
+
+		{% for i in range(totalPages - maxVisible + 1, totalPages) %}
+			{% if ( i > currentPage + nearbyLimit ) %}
+				<a href="{{ url(path ~ i) }}">
+					{{ i }}
+				</a>
+			{% endif %}
+		{% endfor %}
+	{% endif %}
+
+	{% if currentPage < totalPages %}
+		<a href="{{ url(path ~ (currentPage + 1)) }}">
+			{{ "Next" | t }}
+		</a>
+	{% endif %}
+</div>
+{% endif %}
+
+<style>
+.pagination {
+	margin-top: 25px;
+}
+
+.pagination a {
+	display: inline-block;
+	padding: 2px 6px;
+	border-radius: 3px;
+	border: 1px solid #ddd;
+}
+
+.pagination a.active {
+	color: #000;
+}
+</style>

@@ -1,0 +1,203 @@
+{% extends "_layouts/cp" %}
+{% set centered = true %}
+{% set order = craft.snipcart.getOrder(orderId) %}
+{% set title = "Snipcart Order "~order.invoiceNumber|t %}
+
+{% set selectedTab = 'orders' %}
+
+{% set tabs = {
+	orders: { label: "Orders"|t, url: url('snipcart') },
+	customers: { label: "Customers"|t, url: url('snipcart/customers') },
+	discounts: { label: "Discounts"|t, url: url('snipcart/discounts') },
+} %}
+
+
+{% set content %}
+
+<table border="0" cellspacing="0" cellpadding="0" width="100%">
+	<tr valign="top">
+		<td style="vertical-align: top; padding: 0 25px 0 0;">
+			<h3>Order from {{ order.creationDate | date('n/j/Y') }}</h3>
+
+			<p>
+				Last updated {{ order.modificationDate | date('n/j/Y h:ia') }}<br>
+				Status: <b>{{ order.status }}</b><br>
+				Payment Method: <b>{{ order.cardType }} (<code>{{ order.creditCardLast4Digits }}</b></code>)<br>
+				{{ order.paymentGatewayUsed}} Ref: <code>{{ order.paymentTransactionId }}</code>
+			</p>
+
+
+			{% if order.notes %}
+
+			<h4>Notes</h4>
+
+			{{ order.notes }}
+
+			{% endif %}
+
+			{# <p>Grand Total: {{ order.grandTotal }}</p> #}
+			{# <p>Rebate Amount: {{ order.rebateAmount }}</p> #}
+			{# <p>Items Total: {{ order.itemsTotal }}</p> #}
+			{# <p>Grand Total: {{ order.grandTotal }}</p> #}
+			{# <p>Total Weight: {{ order.totalWeight }}</p> #}
+			{# <p>{{ order.hasPromocode }}</p> #}
+			{# <p>Total Rebates: {{ order.totalRebateRate }}</p> #}
+			{# <p>{{ order.willBePaidLater }}</p> #}
+			{# <p>{{ order.customFieldsJson }}</p> #}
+
+
+		</td>
+		<td style="vertical-align: top; padding: 0 25px 0 0;">
+			<h3>Customer</h3>
+			<p>{{ order.cardHolderName }} (<a href="mailto:{{ order.email }}">{{ order.email }}</a>)</p>
+
+			<h4>Billing{% if order.shippingAddressSameAsBilling %} + Shipping{% endif %} Address</h4>
+
+			<p>
+				{{ order.billingAddressName }}<br>
+				{% if order.billingAddressCompanyName %}{{ order.billingAddressCompanyName }}<br>{% endif %}
+				{{ order.billingAddressAddress1 }}<br>
+				{% if order.billingAddressAddress2 %}{{ order.billingAddressAddress2 }}<br>{% endif %}
+				{{ order.billingAddressCity }}, {{ order.billingAddressProvince }} {{ order.billingAddressPostalCode }}<br>
+			</p>
+
+			<p>{{ order.billingAddressPhone }}</p>
+
+			{% if order.shippingAddressSameAsBilling != true %}
+			
+			<br>
+
+			<h4>Shipping Address</h4>
+
+			<p>
+				{{ order.shippingAddressName }}<br>
+				{% if order.shippingAddressCompanyName %}{{ order.shippingAddressCompanyName }}<br>{% endif %}
+				{{ order.shippingAddressAddress1 }}<br>
+				{% if order.shippingAddressAddress2 %}{{ order.shippingAddressAddress2 }}<br>{% endif %}
+				{{ order.shippingAddressCity }}, {{ order.shippingAddressProvince }} {{ order.shippingAddressPostalCode }}<br>
+			</p>
+
+			<p>{{ order.shippingAddressPhone }}</p>
+
+			{% endif %}
+
+		</td>
+		<td style="vertical-align: top;">
+
+			<h3>Items</h3>
+
+			<table class="data" style="width: 100%;">
+				<thead>
+					<th>Qty</th>
+					<th>Name</th>
+					<th></th>
+					<th style="text-align: right;">Price</th>
+				</thead>
+				<tbody>
+					{% for item in order.items %}
+					<tr>
+						<td>
+							{{ item.quantity }}
+						</td>
+						<td>
+							{{ item.name }}
+						</td>
+						<td style="font-size: 0.85em; line-height: 1.3em;">
+							
+							{% if item.customFields | length %}
+							{% for custom in item.customFields %}
+								{{ custom.name }}: <b>{{ custom.value }}</b>{% if loop.last != true %}<br>{% endif %}
+							{% endfor %}
+							{% endif %}
+
+							{# {{ item.initialData }}  #}
+
+						</td>
+						<td style="text-align: right;">
+							${{ item.price | number_format(2) }}
+						</td>
+						{#
+						{{ item.uniqueId }}
+						{{ item.id }}
+						{{ item.url }}
+						{{ item.weight }}
+						{{ item.description }}
+						{{ item.image }}
+			 			{{ item.customFieldsJson }}
+						{{ item.stackable }}
+						{{ item.maxQuantity }}
+						{{ item.totalPrice }}
+						{{ item.totalWeight }}
+						#}
+
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+
+			<br>
+
+			<h3>Cost</h3>
+
+			<table class="data" style="width: 100%;">
+				<tr>
+					<td>
+						Subtotal
+					</td>
+					<td style="text-align: right;">
+						${{ order.subtotal | number_format(2) }}
+					</td>
+				</tr>
+				<tr>
+					<td>
+						Shipping
+					</td>
+					<td style="text-align: right;">
+						${{ order.shippingFees | number_format(2) }} via {{ order.shippingMethod }} ({{ order.totalWeight }} grams)
+					</td>
+				</tr>
+				{% for tax in order.taxes %}
+				<tr>
+					<td>
+						{{ tax.taxName }} ({{ tax.taxRate }})
+					</td>
+					<td style="text-align: right;">
+						${{ tax.amount | number_format(2) }}
+						{# {{ tax.numberForInvoice }} #}
+					</td>
+				</tr>
+				{% endfor %}
+				{% if order.promocodes is defined %}
+				{% for code in order.promocodes %}
+				<tr>
+					<td colspan="2">
+						<i>Promo Code <code>{{ code.code }}</code> ({{ code.type }}, {{ code.rate }})</i>
+					</td>
+				</tr>
+				{% endfor %}
+				{% endif %}
+				{% if order.rebateAmount %}
+				<tr>
+					<td>
+						Total Rebates
+					</td>
+					<td style="text-align: right;">
+						${{ order.rebateAmount | number_format(2) }}
+					</td>
+				</tr>
+				{% endif %}
+				<tr>
+					<td>
+						<b>Grand Total</b>
+					</td>
+					<td style="text-align: right;">
+						<b>${{ order.finalGrandTotal | number_format(2) }}</b>
+					</td>
+				</tr>
+			</table>
+
+		</td>
+	</tr>
+</table>
+
+{% endset %}

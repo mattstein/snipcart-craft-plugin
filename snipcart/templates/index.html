@@ -1,0 +1,100 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+{% set centered = true %}
+{% set title = "Snipcart Orders"|t %}
+
+{% set orders = craft.snipcart.listOrders %}
+
+{% set selectedTab = 'orders' %}
+
+{% set tabs = {
+	orders: { label: "Orders"|t, url: url('snipcart') },
+	customers: { label: "Customers"|t, url: url('snipcart/customers') },
+	discounts: { label: "Discounts"|t, url: url('snipcart/discounts') },
+} %}
+
+{% set content %}
+
+	{% if craft.snipcart.isLinked %}
+
+	<p id="noredirects"{% if orders|length %} class="hidden"{% endif %}>
+		{{ "There aren't any orders yet."|t }}
+	</p>
+
+	{% else %}
+
+	<p>
+		{{ "Add your Snipcart Private API Key in the plugin settings."|t }}
+	</p>
+
+	{% endif %}
+
+	{% if orders|length %}
+
+		<div class="callout" style="background: #eee; padding: 10px; margin-bottom: 25px;">
+			
+			<form action="" method="post">
+
+				{% set startDate = now | date_modify("-1 month")%}
+				{% set endDate = now %}
+
+				{{ forms.date({
+					first: true,
+					label: 'Start Date'|t,
+					id: 'startDate',
+					required: true,
+					name: 'startDate',
+					defaultDate: craft.snipcart.startDate,
+					value: craft.snipcart.startDate
+				}) }}
+
+				<em>to</em>
+
+				{{ forms.date({
+					label: 'End Date'|t,
+					id: 'endDate',
+					required: true,
+					name: 'endDate',
+					defaultDate: craft.snipcart.endDate,
+					value: craft.snipcart.endDate
+				}) }}
+
+				<input type="submit" class="btn submit" name="submit" value="Update">
+
+			</form>
+		</div>
+
+		<table id="orders" class="data" style="width: 100%;">
+			<thead>
+				<th scope="col">{{ "Invoice"|t }}</th>
+				<th scope="col">{{ "Placed"|t }}</th>
+				<th scope="col">{{ "Cardholder"|t }}</th>
+				<th scope="col">{{ "Email"|t }}</th>
+				<th scope="col">{{ "Total"|t }}</th>
+				<th scope="col">{{ "Status"|t }}</th>
+			</thead>
+			<tbody>
+			
+				{% for order in orders.items %}
+					<tr data-id="{{ order.invoiceNumber }}" data-name="{{ order.invoiceNumber }}">
+						<td><a href="{{ url('snipcart/order/'~order.token) }}">{{ order.invoiceNumber }}</a></td>
+						<td>{{ order.creationDate | date('n/j/Y') }}</td>
+						<td>{{ order.cardHolderName }}</td>
+						<td><a href="mailto:{{ order.email }}">{{ order.email }}</a></td>
+						<td>${{ order.finalGrandTotal | number_format(2) }}</td>
+						<td>
+							{% if order.status == "Open" %}
+							<div class="status"></div>
+							{% elseif order.status == "Processed" %}
+							<div class="status active"></div>
+							{% endif %}
+							{{ order.status }}
+						</td>
+					</tr>
+				{% endfor %}
+
+			</tbody>
+		</table>
+	{% endif %}
+
+{% endset %}

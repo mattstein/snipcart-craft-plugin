@@ -1,0 +1,13 @@
+{% import "_includes/forms" as forms %}
+
+{{ forms.textField({
+	first: true,
+	label: 'Snipcart API Key'|t,
+	id: 'apiKey',
+	required: true,
+	name: 'apiKey',
+	value: settings.apiKey,
+	autofocus: true,
+	errors: settings.getErrors('apiKey'),
+	instructions: "Add your unique Snipcart API key. You can find this on your account page in Snipcart."
+}) }}
