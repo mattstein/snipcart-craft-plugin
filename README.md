@@ -1,6 +1,6 @@
 # Snipcart Craft Plugin
 
-Browse Snipcart orders, customers, and discounts from the Craft control panel. **This is a work in progress**, with discounts being completely un-tested and a web hook for (crudely) emailing order notifications. It should be useful out of the box, but any improvements are welcome!
+Browse [Snipcart](https://snipcart.com/) orders, customers, and discounts from the Craft control panel. **This is a work in progress**, with discounts being completely un-tested and a web hook for (crudely) emailing order notifications. It should be useful out of the box, but any improvements are welcome!
 
 ![The Craft plugin's main view.](http://files.workingconcept.com/raw/snipcart-orders-8FPa5gvpLK.png)
 
