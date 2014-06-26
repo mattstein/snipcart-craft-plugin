@@ -5,7 +5,6 @@ namespace Craft;
 class SnipcartService extends BaseApplicationComponent
 {
 
-	protected $_snipcart;
 	protected $_snipcartUrl;
 	protected $_settings;
 	protected $_isLinked;
@@ -14,9 +13,10 @@ class SnipcartService extends BaseApplicationComponent
 	 * Constructor
 	 */
 	
-	public function __construct($snipcart = null)
+	public function init()
 	{
-		$this->_snipcart    = $snipcart;
+		parent::init();
+
 		$this->_settings    = craft()->plugins->getPlugin('snipcart')->getSettings();
 		$this->_snipcartUrl = 'https://app.snipcart.com/api/';
 		$this->_isLinked    = isset($this->_settings->apiKey) && ! empty($this->_snipcartUrl);
@@ -38,7 +38,7 @@ class SnipcartService extends BaseApplicationComponent
 	
 	public function getOrder($token)
 	{
-		$order = $this->_curlRequest('orders/'.$token);
+		$order = $this->_apiRequest('orders/'.$token);
 
 		return $order;
 	}
@@ -55,7 +55,7 @@ class SnipcartService extends BaseApplicationComponent
 	
 	public function listOrders($page = 1, $limit = 250)
 	{
-		$orders = $this->_curlRequest('orders', array(
+		$orders = $this->_apiRequest('orders', array(
 			'offset' => $page-1,
 			'limit'  => $limit,
 			'from'   => date('c', $this->dateRangeStart()),
@@ -76,7 +76,7 @@ class SnipcartService extends BaseApplicationComponent
 
 	public function listCustomers($page = 1, $limit = 250)
 	{
-		$customers = $this->_curlRequest('customers', array(
+		$customers = $this->_apiRequest('customers', array(
 			'offset' => ($page-1)*$limit,
 			'limit'  => $limit
 		));
@@ -93,7 +93,7 @@ class SnipcartService extends BaseApplicationComponent
 
 	public function listDiscounts()
 	{
-		$discounts = $this->_curlRequest('discounts');
+		$discounts = $this->_apiRequest('discounts');
 
 		return ! empty($discounts) ? $discounts : array();
 	}
@@ -109,7 +109,7 @@ class SnipcartService extends BaseApplicationComponent
 	
 	public function getCustomer($token)
 	{
-		$customer = $this->_curlRequest('customers/'.$token);
+		$customer = $this->_apiRequest('customers/'.$token);
 
 		return $customer;
 	}
@@ -125,7 +125,7 @@ class SnipcartService extends BaseApplicationComponent
 	
 	public function getCustomerOrders($token)
 	{
-		$customerOrders = $this->_curlRequest('customers/'.$token.'/orders');
+		$customerOrders = $this->_apiRequest('customers/'.$token.'/orders');
 
 		return $customerOrders;
 	}
@@ -182,52 +182,58 @@ class SnipcartService extends BaseApplicationComponent
 
 
 	/**
-	 * Query the snipcart API via cURL
+	 * Query the Snipcart API via Guzzle
 	 * 
-	 * @param  string $endpoint Snipcart API method (segment) to query
+	 * @param  string $query    Snipcart API method (segment) to query
 	 * @param  array  $inData   any data that should be sent with the request; will be formatted as URL parameters or POST data
-	 * @param  string $method   'get' (default) or 'post'
 	 * 
 	 * @return stdClass query response
 	 */
 	
-	private function _curlRequest($endpoint = '', $inData = array(), $method = 'get')
+	private function _apiRequest($query = '', $inData = array())
 	{
 		if ( ! $this->_isLinked) 
 			return FALSE;
 
-		$baseUrl = $this->_snipcartUrl;
-		$apiUrl  = $baseUrl . $endpoint;
-		$isPost  = strtolower($method) != 'get';
+		if ( ! empty($inData)) {			
+			$query .= '?';
+			$query .= http_build_query($inData);
+		}
 		
-		$data = array();
+		print_r($inData);
 
-		foreach ($inData as $key => $value)
-			$data[$key] = $value;
+		echo $query;
 
-		$ch = curl_init();
+		$cachedResponse = craft()->fileCache->get($query);
 
-		if ( ! empty($data) AND $isPost) { 
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-			$apiUrl .= '?api_key='.$data['api_key'];	
-		} else if ( ! empty($data)) {			
-			$apiUrl .= '?';
-			$apiUrl .= http_build_query($data);
+		if ($cachedResponse) {
+			return json_decode($cachedResponse);
 		}
 
-		curl_setopt($ch, CURLOPT_USERPWD, $this->_settings->apiKey . ":");  
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json; charset=utf-8","Accept:application/json, text/javascript, */*; q=0.01")); 
-		curl_setopt($ch, CURLOPT_URL, $apiUrl);
-		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+		try {
+			$client  = new \Guzzle\Http\Client($this->_snipcartUrl);
+			$request = $client->get($query, array(), array(
+				'auth'    => array($this->_settings->apiKey, 'password', 'Basic'),
+				'headers' => array(
+					'Content-Type' => 'applicaton/json; charset=utf-8',
+					'Accept'       => 'application/json, text/javascript, */*; q=0.01',
+				),
+				'verify'  => false,
+				'debug'   => true
+			));
 
-		$response = trim(curl_exec($ch));
-		curl_close($ch);
+			$response = $request->send();
 
-		return json_decode($response);
+			if ( ! $response->isSuccessful()) {
+				return;
+			}
+
+			craft()->fileCache->set($query, $response->getBody(true), 600); // set to expire in 10 minutes
+
+			return json_decode($response->getBody(true));
+		} catch(\Exception $e) {
+			return;
+		}
 	}
 
 }

@@ -13,9 +13,20 @@ Create yourself a private Snipcart API key by logging into the Snipcart control 
 ## Limitations
 
 - Information is read-only, and limited to what's available from the [Snipcart API](http://docs.snipcart.com/api-reference/introduction).
-- There's not yet any caching in place, so browsing can be slow particularly on customer detail pages.
 - The (relatively secret) web hook is available at `http://yoursite.com/actions/snipcart/webhooks/handle`, but `Snipcart_WebhooksController` is just a rough experiment at this point.
 - I've not yet tested the Discounts view.
 - I'm certain that the templates could be improved, so please don't judge too harshly.
 
 Hopefully this will be helpful to someone integrating with Snipart. I'm open to whatever issues or pull requests anybody might have!
+
+## Change Log
+
+**v0.9.1**   
+
+- Started making API calls with Guzzle since it ships with Craft.
+- Added 10-minute cache for API calls.
+- Added this change log.
+
+**v0.9**   
+
+- Initial work, with Discounts being completely un-tested.
