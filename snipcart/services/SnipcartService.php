@@ -200,10 +200,6 @@ class SnipcartService extends BaseApplicationComponent
 			$query .= http_build_query($inData);
 		}
 		
-		print_r($inData);
-
-		echo $query;
-
 		$cachedResponse = craft()->fileCache->get($query);
 
 		if ($cachedResponse) {
