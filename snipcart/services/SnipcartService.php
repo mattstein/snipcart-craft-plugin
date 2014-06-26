@@ -215,7 +215,7 @@ class SnipcartService extends BaseApplicationComponent
 					'Accept'       => 'application/json, text/javascript, */*; q=0.01',
 				),
 				'verify'  => false,
-				'debug'   => true
+				'debug'   => false
 			));
 
 			$response = $request->send();
