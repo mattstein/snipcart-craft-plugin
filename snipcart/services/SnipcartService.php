@@ -155,8 +155,9 @@ class SnipcartService extends BaseApplicationComponent
 
 	public function dateRangeStart()
 	{
-		if (craft()->request->getPost('startDate', FALSE)) {
-			$startDate = strtotime(craft()->request->getPost('startDate')['date'])+86400;
+		$postValue = craft()->request->getPost('startDate', FALSE);
+		if ($postValue) {
+			$startDate = strtotime($postValue['date'])+86400;
 		} else {
 			$startDate = strtotime("-1 month");
 		}
@@ -166,8 +167,9 @@ class SnipcartService extends BaseApplicationComponent
 
 	public function dateRangeEnd()
 	{
-		if (craft()->request->getPost('endDate', FALSE)) {
-			$endDate = strtotime(craft()->request->getPost('endDate')['date'])+86400;
+		$postValue = craft()->request->getPost('endDate', FALSE);
+		if ($postValue) {
+			$endDate = strtotime($postValue['date'])+86400;
 		} else {
 			$endDate = time();
 		}
