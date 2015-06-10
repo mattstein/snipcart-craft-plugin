@@ -11,7 +11,7 @@ class SnipcartPlugin extends BasePlugin
 
 	public function getVersion()
 	{
-		return '0.9.1';
+		return '0.9.2';
 	}
 
 	public function getDeveloper()
@@ -33,6 +33,7 @@ class SnipcartPlugin extends BasePlugin
 	{
 		return array(
 			'apiKey' => array(AttributeType::String, 'required' => true),
+			'notificationEmails' => array(AttributeType::String, 'required' => true),
 		);
 	}
 	

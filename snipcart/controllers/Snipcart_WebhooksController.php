@@ -5,119 +5,183 @@ namespace Craft;
 class Snipcart_WebhooksController extends BaseController
 {
 	protected $allowAnonymous = true;
+	protected $_settings;
 
+
+	/**
+	 * Handle the $_POST data that Snipcart sent, which is a raw body of JSON
+	 * 
+	 * @return void
+	 */
+	
 	public function actionHandle() 
 	{
 		$this->requirePostRequest();
+		$this->_settings = craft()->plugins->getPlugin('snipcart')->getSettings();
 
 		$json = craft()->request->getRawBody();
 		$body = json_decode($json);
 
-		if (is_null($body) or !isset($body->eventName)) {
+		if (is_null($body) or !isset($body->eventName))
+		{
+			/*
+			 * every Snipcart post should have an eventName property, so we've got empty data or a bad format
+			 */
+
 			$this->returnBadRequest(array('reason' => 'NULL response body or missing eventName.'));
 			return;
 		}
-
+		
+		/*
+		 * respond to different types of Snipcart events—in this case only one
+		 */
+		
 		switch ($body->eventName)
 		{
 			case 'order.completed':
-				$this->_processOrderCompletedEvent($body);
+				$this->processOrderCompletedEvent($body);
 				break;
 			default:
-				$this->_returnBadRequest(array('reason' => 'Unsupported event'));
+				$this->returnBadRequest(array('reason' => 'Unsupported event'));
 				break;
 		}
 	}
 
-	private function _returnBadRequest($errors = array())
+
+	/**
+	 * Return a Craft entry whose `productSku` field matches the supplied string
+	 * 
+	 * @param  string $sku The string we'll use for matching the SKU
+	 * @return mixed       Craft entry or FALSE
+	 */
+	
+	private function getMatchingEntryBySku($sku)
+	{
+		// TODO: make channel/match criteria a plugin setting
+
+		$criteria         = craft()->elements->getCriteria(ElementType::Entry);
+		$criteria->search = 'productSku:'.$sku;
+		$entries          = $criteria->find();
+
+		if (count($entries) > 0)
+		{
+			return $entries[0];
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+
+
+	/**
+	 * Reduce the inventory value for an entry, by the supplied quantity
+	 * 
+	 * @param  EntryModel $entry    a Craft entry
+	 * @param  int        $quantity the value to subtract from the current inventory
+	 * @return int                  the new adjusted inventory value
+	 */
+	
+	private function reduceEntryInventory($entry, $quantity)
+	{
+		$currentValue = $entry->getContent()->productInventory;
+		$newValue = 0;
+
+		if ($currentValue > $quantity)
+		{
+			$newValue = $currentValue - $quantity;
+		}
+
+		// TODO: make field a plugin setting
+
+		$entry->getContent()->productInventory = $newValue;
+		craft()->entries->saveEntry($entry);
+
+		return $newValue;
+	}
+
+
+	/**
+	 * Output a 400 response with an optional JSON error array
+	 * 
+	 * @param  array  $errors Array of errors that explain the 400 response
+	 * @return void
+	 */
+	
+	private function returnBadRequest($errors = array())
 	{
 		header('HTTP/1.1 400 Bad Request');
 		$this->returnJson(array('success' => false, 'errors' => $errors));
 	}
 
-	private function _processOrderCompletedEvent($data)
+
+	/**
+	 * Process the Snipcart completed order event by adjusting quantities and sending a notification email
+	 * 
+	 * @param  object $data The decoded Snipcart post
+	 * @return void
+	 */
+	
+	private function processOrderCompletedEvent($data)
 	{
 		$content = $data->content;
-		$updated = array();
+		$entries = array();
 
-		/**
-		 * TODO: add web hook options and email templates to control panel
-		 */
-
-		$email = new EmailModel();
-		$email->toEmail = 'matt@workingconcept.com';
-		$email->subject = $content->cardHolderName.' just placed an order';
-
-		$body = $content->cardHolderName." ({$content->email}) just placed order {$content->invoiceNumber} for $".$content->finalGrandTotal.":<br>\n";
-
-		foreach($content->items as $item)
+		foreach ($content->items as $item)
 		{
-			$body .= "- ".$item->quantity." ".$item->name." @ $".$item->price;
-
-			if (sizeof($item->customFields) > 0)
+			if ($entry = $this->getMatchingEntryBySku($item->id))
 			{
-				$customFields = "";
-
-				foreach($item->customFields as $field)
-				{
-					$customFields .= $field->name.": ".$field->value.", ";
-				}
-
-				$customFields = substr($customFields, 0, -2);
-
-				$body .= " ($customFields)";
+				$entries[] = $entry;
+				$this->reduceEntryInventory($entry, $item->quantity);
 			}
 		}
 
-		$body .= "<br>\n\n";
-
-		if ($content->shippingAddressSameAsBilling)
+		if (isset($this->_settings->notificationEmails))
 		{
-			$body .= "### Billing + Shipping Address\n";
+			$emailChunks = explode(',', $this->_settings->notificationEmails);
+			$emails = array();
 
-			$body .= "{$content->billingAddressName}<br>";
-			$body .= "{$content->billingAddressAddress1}<br>";
-			if ( ! empty($content->billingAddressAddress2)) { $body .= "{$content->billingAddressAddress2}<br>"; }
-			$body .= "{$content->billingAddressCity}, {$content->billingAddressProvince} {$content->billingAddressPostalCode}<br>";
-			$body .= "{$content->billingAddressCountry}<br><br>";
-			$body .= "{$content->billingAddressPhone}<br>";
+			foreach ($emailChunks as $email)
+			{
+				$email = trim($email);
+
+				if (filter_var($email, FILTER_VALIDATE_EMAIL))
+				{
+					$emails[] = $email;
+				}
+			}
+
+			$errors = array();
+			$email = new EmailModel();
+
+			foreach ($emails as $address)
+			{
+				$email->toEmail = $address;
+				$email->subject = $content->cardHolderName.' just placed an order';
+				$email->body    = craft()->templates->render('snipcart/email', array('order' => $content, 'entries' => $entries));
+				
+				try
+				{
+					craft()->email->sendEmail($email);
+				}
+				catch (ErrorException $e)
+				{
+					$errors[] = $e;
+				}
+			}
+
+			if (sizeof($errors) > 0)
+			{
+				$this->returnJson(array('success' => true));
+			}
+			else
+			{
+				$this->returnJson(array('success' => false, 'errors' => $errors));
+			}
 		}
 		else
 		{
-			$body .= "### Billing Address\n";
-
-			$body .= "{$content->billingAddressName}<br>";
-			$body .= "{$content->billingAddressAddress1}<br>";
-			if ( ! empty($content->billingAddressAddress2)) { $body .= "{$content->billingAddressAddress2}<br>"; }
-			$body .= "{$content->billingAddressCity}, {$content->billingAddressProvince} {$content->billingAddressPostalCode}<br>";
-			$body .= "{$content->billingAddressCountry}<br><br>";
-			$body .= "{$content->billingAddressPhone}<br>";
-
-			$body .= "### Shipping Address\n";
-
-			$body .= "{$content->shippingAddressName}<br>";
-			$body .= "{$content->shippingAddressAddress1}<br>";
-			if ( ! empty($content->shippingAddressAddress2)) { $body .= "{$content->shippingAddressAddress2}<br>"; }
-			$body .= "{$content->shippingAddressCity}, {$content->shippingAddressProvince} {$content->shippingAddressPostalCode}<br>";
-			$body .= "{$content->shippingAddressCountry}<br><br>";
-			$body .= "{$content->shippingAddressPhone}<br>";
-		}
-
-		$body .= "<br><br>\n\n";
-
-		$body .= "### Shipping Method: {$content->shippingMethod} ($".$content->shippingFees.")<br>";
-
-		$email->body = $body;
-
-		try
-		{
-			craft()->email->sendEmail($email);
 			$this->returnJson(array('success' => true));
 		}
-		catch (ErrorException $e)
-		{
-			$this->returnJson(array('success' => false, 'errors' => $e));
-		}
 	}
-
 }

@@ -194,6 +194,8 @@ class SnipcartService extends BaseApplicationComponent
 	
 	private function _apiRequest($query = '', $inData = array())
 	{
+		$useCache = false;
+
 		if ( ! $this->_isLinked) 
 			return FALSE;
 
@@ -201,11 +203,15 @@ class SnipcartService extends BaseApplicationComponent
 			$query .= '?';
 			$query .= http_build_query($inData);
 		}
-		
-		$cachedResponse = craft()->fileCache->get($query);
 
-		if ($cachedResponse) {
-			return json_decode($cachedResponse);
+		if ($useCache)
+		{
+			$cachedResponse = craft()->fileCache->get($query);
+
+			if ($cachedResponse)
+			{
+				return json_decode($cachedResponse);
+			}
 		}
 
 		try {
@@ -226,7 +232,10 @@ class SnipcartService extends BaseApplicationComponent
 				return;
 			}
 
-			craft()->fileCache->set($query, $response->getBody(true), 600); // set to expire in 10 minutes
+			if ($useCache)
+			{
+				craft()->fileCache->set($query, $response->getBody(true), 600); // set to expire in 10 minutes
+			}
 
 			return json_decode($response->getBody(true));
 		} catch(\Exception $e) {

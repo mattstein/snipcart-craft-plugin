@@ -1,0 +1,77 @@
+<p>{{ order.cardHolderName }} ({{ order.email }}) just placed order {{ order.invoiceNumber }} for ${{ order.finalGrandTotal }}:</p>
+
+<hr style="height: 0; border-top: 1px solid #ddd; color: #ddd; background: #ddd;">
+
+<h3>Items</h3>
+<ul>
+{% for item in order.items %}
+	<li>
+		<span style="color: #666;">{{ item.quantity }}x</span> {{ item.name }} @ ${{ item.price }}
+		{%- if item.customFields | length -%}
+			({% for field in item.customFields -%}
+			    {{ field.name }}: {{ field.value }}{% if loop.last != true %},{% endif %}
+			{%- endfor %})
+		{%- endif -%}
+	</li>
+{% endfor %}
+</ul>
+
+<hr style="height: 0; border-top: 1px solid #ddd; color: #ddd; background: #ddd;">
+
+{% if order.shippingAddressSameAsBilling %}
+
+<h3>Billing + Shipping Address</h3>
+
+<p>{{ order.billingAddressName }}<br>
+{{ order.billingAddressAddress1 }}<br>
+{% if order.billingAddressAddress2 %}
+{{ order.billingAddressAddress2 }}<br>
+{% endif %}
+{{ order.billingAddressCity }}, {{ order.billingAddressProvince }} {{ order.billingAddressPostalCode }}<br>
+{{ order.billingAddressCountry }}</p>
+
+<p>{{ order.billingAddressPhone }}</p>
+
+{% else %}
+
+<h3>Billing Address</h3>
+
+<p>{{ order.billingAddressName }}<br>
+{{ order.billingAddressAddress1 }}<br>
+{% if order.billingAddressAddress2 %}
+{{ order.billingAddressAddress2 }}<br>
+{% endif %}
+{{ order.billingAddressCity }}, {{ order.billingAddressProvince }} {{ order.billingAddressPostalCode }}<br>
+{{ order.billingAddressCountry }}</p>
+
+<p>{{ order.billingAddressPhone }}</p>
+
+<hr style="height: 0; border-top: 1px solid #ddd; color: #ddd; background: #ddd;">
+
+<h3>Shipping Address</h3>
+
+<p>{{ order.shippingAddressName }}<br>
+{{ order.shippingAddressAddress1 }}<br>
+{% if order.shippingAddressAddress2 %}
+{{ order.shippingAddressAddress2 }}<br>
+{% endif %}
+{{ order.shippingAddressCity }}, {{ order.shippingAddressProvince }} {{ order.shippingAddressPostalCode }}<br>
+{{ order.shippingAddressCountry }}</p>
+
+<p>{{ order.shippingAddressPhone }}</p>
+
+{% endif %}
+
+<hr style="height: 0; border-top: 1px solid #ddd; color: #ddd; background: #ddd;">
+
+<h3>Shipping Method: {{ order.shippingMethod }} (${{ order.shippingFees }})</h3>
+
+<hr style="height: 0; border-top: 1px solid #ddd; color: #ddd; background: #ddd;">
+
+<h3>Remaining Quantities</h3>
+
+<ul>
+	{% for entry in entries %}
+	<li><span style="{% if entry.productInventory == 0 %}color: red;{% endif %}">{{ entry.title }}: <b>{{ entry.productInventory }}</b></span></li>
+	{% endfor %}
+</ul>

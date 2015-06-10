@@ -1,0 +1,25 @@
+{% import "_includes/forms" as forms %}
+
+{{ forms.textField({
+	first: true,
+	label: 'Snipcart API Key'|t,
+	id: 'apiKey',
+	required: true,
+	name: 'apiKey',
+	value: settings.apiKey,
+	autofocus: true,
+	errors: settings.getErrors('apiKey'),
+	instructions: "Add your unique Snipcart API key. You can find this on your account page in Snipcart."
+}) }}
+
+{{ forms.textField({
+	first: true,
+	label: 'Notification Emails'|t,
+	id: 'notificationEmails',
+	required: true,
+	name: 'notificationEmails',
+	value: settings.notificationEmails,
+	autofocus: true,
+	errors: settings.getErrors('notificationEmails'),
+	instructions: "Add comma-separated email addresses that should receive email notifications as orders come in through the web hook."
+}) }}
