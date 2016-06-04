@@ -11,7 +11,7 @@ class SnipcartPlugin extends BasePlugin
 
 	public function getVersion()
 	{
-		return '0.9.2';
+		return '0.9.3';
 	}
 
 	public function getDeveloper()
@@ -23,7 +23,22 @@ class SnipcartPlugin extends BasePlugin
 	{
 		return 'http://workingconcept.com';
 	}
-	
+
+	public function getDescription()
+	{
+		return 'Browse Snipcart order details from the Craft control panel.';
+	}
+
+	public function getReleaseFeedUrl()
+	{
+		return 'https://raw.githubusercontent.com/mattstein/snipcart-craft-plugin/master/releases.json';
+	}
+
+	public function getDocumentationUrl()
+	{
+	    return 'https://github.com/mattstein/snipcart-craft-plugin/blob/master/README.md';
+	}
+
 	public function hasCpSection()
 	{
 		return true;
@@ -32,7 +47,7 @@ class SnipcartPlugin extends BasePlugin
 	protected function defineSettings()
 	{
 		return array(
-			'apiKey' => array(AttributeType::String, 'required' => true),
+			'apiKey'             => array(AttributeType::String, 'required' => true),
 			'notificationEmails' => array(AttributeType::String, 'required' => true),
 		);
 	}
@@ -48,6 +63,7 @@ class SnipcartPlugin extends BasePlugin
 	{
 		return array(
 			'snipcart\/order\/(?P<orderId>\S+)'        => 'snipcart/order',
+			'snipcart\/orders\/(?P<pageNumber>\S+)'    => 'snipcart/index',
 			'snipcart\/customers\/(?P<pageNumber>\S+)' => 'snipcart/customers',
 			'snipcart\/customer\/(?P<customerId>\S+)'  => 'snipcart/customer',
 			'snipcart\/discounts\/'                    => 'snipcart/discounts'

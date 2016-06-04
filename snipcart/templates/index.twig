@@ -3,7 +3,15 @@
 {% set centered = true %}
 {% set title = "Snipcart Orders"|t %}
 
-{% set orders = craft.snipcart.listOrders %}
+{% if pageNumber is not defined %}
+	{% set pageNumber = 1 %}
+{% endif %}
+
+{% set orders = craft.snipcart.listOrders(pageNumber) %}
+
+{% if orders.totalItems <= orders.limit and pageNumber > 1 %}
+	{% redirect url('snipcart') %}
+{% endif %}
 
 {% set selectedTab = 'orders' %}
 
@@ -95,6 +103,12 @@
 
 			</tbody>
 		</table>
+
+		{% set totalPages = (orders.totalItems / orders.limit) | round(0,'ceil') %}
+		{% set maxVisible = 10 %}
+
+		{% include "snipcart/pagination" with { currentPage: pageNumber, totalPages: totalPages, maxVisible: maxVisible, path: 'snipcart/orders/' } %}
+
 	{% endif %}
 
 {% endset %}

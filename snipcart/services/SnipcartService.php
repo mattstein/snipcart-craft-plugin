@@ -36,11 +36,9 @@ class SnipcartService extends BaseApplicationComponent
 	 * @return stdClass
 	 */
 	
-	public function getOrder($token)
+	public function getOrder($orderId)
 	{
-		$order = $this->_apiRequest('orders/'.$token);
-
-		return $order;
+		return $this->_apiRequest('orders/'.$orderId);
 	}
 
 
@@ -53,10 +51,10 @@ class SnipcartService extends BaseApplicationComponent
 	 * @return stdClass or empty array
 	 */
 	
-	public function listOrders($page = 1, $limit = 250)
+	public function listOrders($page = 1, $limit = 50)
 	{
 		$orders = $this->_apiRequest('orders', array(
-			'offset' => $page-1,
+			'offset' => ($page-1)*$limit,
 			'limit'  => $limit,
 			'from'   => date('c', $this->dateRangeStart()),
 			'to'     => date('c', $this->dateRangeEnd())
@@ -74,7 +72,7 @@ class SnipcartService extends BaseApplicationComponent
 	 * @return stdClass or empty array
 	 */
 
-	public function listCustomers($page = 1, $limit = 250)
+	public function listCustomers($page = 1, $limit = 50)
 	{
 		$customers = $this->_apiRequest('customers', array(
 			'offset' => ($page-1)*$limit,
@@ -102,32 +100,47 @@ class SnipcartService extends BaseApplicationComponent
 	/**
 	 * Get a customer from Snipcart
 	 * 
-	 * @param int $token Snipcart customer ID
+	 * @param int $customerId Snipcart customer ID
 	 * 
 	 * @return stdClass
 	 */
 	
-	public function getCustomer($token)
+	public function getCustomer($customerId)
 	{
-		$customer = $this->_apiRequest('customers/'.$token);
-
-		return $customer;
+		return $this->_apiRequest('customers/'.$customerId);
 	}
 
 
 	/**
 	 * Get a given customer's order history
 	 * 
-	 * @param int $token Snipcart customer ID
+	 * @param int $customerId Snipcart customer ID
 	 * 
 	 * @return stdClass
 	 */
 	
-	public function getCustomerOrders($token)
+	public function getCustomerOrders($customerId)
 	{
-		$customerOrders = $this->_apiRequest('customers/'.$token.'/orders');
+		return $this->_apiRequest('customers/'.$customerId.'/orders');
+	}
 
-		return $customerOrders;
+
+	/**
+	 * Ask Snipcart whether its provided token is genuine
+	 * (We use this for webhook posts to be sure they came from Snipcart)
+	 *
+	 * Tokens are deleted after this call, so it can only be used once to verify,
+	 * and tokens also expire in one hour—expect a 404 if the token is deleted
+	 * or if it expires
+	 * 
+	 * @param string  $token  $_POST['HTTP_X_SNIPCART_REQUESTTOKEN']
+	 * 
+	 * @return stdClass
+	 */
+
+	public function validateToken($token)
+	{
+		return $this->_apiRequest('requestvalidation/'.$token, null, false);
 	}
 
 
@@ -142,8 +155,9 @@ class SnipcartService extends BaseApplicationComponent
 		return $this->_snipcartUrl;
 	}
 
+
 	/**
-	 * Get the Snipcart URL
+	 * See whether we're linked up to Snipcart
 	 * 
 	 * @return stdClass
 	 */
@@ -153,26 +167,38 @@ class SnipcartService extends BaseApplicationComponent
 		return $this->_isLinked;
 	}
 
+
 	public function dateRangeStart()
 	{
-		$postValue = craft()->request->getPost('startDate', FALSE);
-		if ($postValue) {
-			$startDate = strtotime($postValue['date'])+86400;
-		} else {
-			$startDate = strtotime("-1 month");
-		}
+		$param     = craft()->request->getPost('startDate', FALSE);
+		$default   = strtotime("-1 month");
+		$stored    = craft()->httpSession->get('snipcartStartDate');
+		$startDate = $default;
+
+		if ($param)
+			$startDate = strtotime($param['date'])+86400;
+		else
+			$startDate = $stored ? $stored : $default;
+
+		craft()->httpSession->add('snipcartStartDate', $startDate);
 
 		return $startDate;
 	}
 
+
 	public function dateRangeEnd()
 	{
-		$postValue = craft()->request->getPost('endDate', FALSE);
-		if ($postValue) {
-			$endDate = strtotime($postValue['date'])+86400;
-		} else {
-			$endDate = time();
-		}
+		$param     = craft()->request->getPost('endDate', FALSE);
+		$default   = time();
+		$stored    = craft()->httpSession->get('snipcartEndDate');
+		$endDate = $default;
+
+		if ($param)
+			$endDate = strtotime($param['date'])+86400;
+		else
+			$endDate = $stored ? $stored : $default;
+
+		craft()->httpSession->add('snipcartEndDate', $endDate);
 
 		return $endDate;
 	}
@@ -192,14 +218,13 @@ class SnipcartService extends BaseApplicationComponent
 	 * @return stdClass query response
 	 */
 	
-	private function _apiRequest($query = '', $inData = array())
+	private function _apiRequest($query = '', $inData = array(), $useCache = true)
 	{
-		$useCache = false;
-
 		if ( ! $this->_isLinked) 
-			return FALSE;
+			return false;
 
-		if ( ! empty($inData)) {			
+		if ( ! empty($inData)) 
+		{			
 			$query .= '?';
 			$query .= http_build_query($inData);
 		}
@@ -209,12 +234,11 @@ class SnipcartService extends BaseApplicationComponent
 			$cachedResponse = craft()->fileCache->get($query);
 
 			if ($cachedResponse)
-			{
 				return json_decode($cachedResponse);
-			}
 		}
 
-		try {
+		try 
+		{
 			$client  = new \Guzzle\Http\Client($this->_snipcartUrl);
 			$request = $client->get($query, array(), array(
 				'auth'    => array($this->_settings->apiKey, 'password', 'Basic'),
@@ -222,23 +246,22 @@ class SnipcartService extends BaseApplicationComponent
 					'Content-Type' => 'applicaton/json; charset=utf-8',
 					'Accept'       => 'application/json, text/javascript, */*; q=0.01',
 				),
-				'verify'  => false,
-				'debug'   => false
+				'verify' => false,
+				'debug'  => false
 			));
 
 			$response = $request->send();
 
-			if ( ! $response->isSuccessful()) {
+			if ( ! $response->isSuccessful())
 				return;
-			}
 
 			if ($useCache)
-			{
 				craft()->fileCache->set($query, $response->getBody(true), 600); // set to expire in 10 minutes
-			}
 
 			return json_decode($response->getBody(true));
-		} catch(\Exception $e) {
+		} 
+		catch(\Exception $e) 
+		{
 			return;
 		}
 	}

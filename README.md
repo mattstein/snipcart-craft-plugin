@@ -22,22 +22,3 @@ The webhook can also decrement quantities for you. You're in luck if you happen 
 - I'm certain that the templates could be improved, so please don't judge too harshly.
 
 Hopefully this will be helpful to someone integrating with Snipart. I'm open to whatever issues or pull requests anybody might have!
-
-## Change Log
-
-**v0.9.2** 
-
-- Set webhook email address in plugin settings.
-- Email notification now has its own template.
-- Quantity handling started in webhook.
-- Renamed .html templates to .twig for selfish (code highlighting) reasons.
-
-**v0.9.1**   
-
-- Started making API calls with Guzzle since it ships with Craft.
-- Added 10-minute cache for API calls.
-- Added this change log.
-
-**v0.9**   
-
-- Initial work, with Discounts being completely un-tested.

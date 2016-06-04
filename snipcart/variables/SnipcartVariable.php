@@ -5,14 +5,14 @@ namespace Craft;
 class SnipcartVariable
 {
 	
-	public function listOrders()
+	public function listOrders($pageNumber = 1)
 	{		
-		return craft()->snipcart->listOrders();
+		return craft()->snipcart->listOrders($pageNumber);
 	}
 	
-	public function listCustomers($pageId = 1)
+	public function listCustomers($pageNumber = 1)
 	{		
-		return craft()->snipcart->listCustomers($pageId);
+		return craft()->snipcart->listCustomers($pageNumber);
 	}
 	
 	public function listDiscounts()
@@ -20,19 +20,19 @@ class SnipcartVariable
 		return craft()->snipcart->listDiscounts();
 	}
 	
-	public function getOrder($token)
+	public function getOrder($orderId)
 	{
-		return craft()->snipcart->getOrder($token);
+		return craft()->snipcart->getOrder($orderId);
 	}
 
-	public function getCustomer($token)
+	public function getCustomer($customerId)
 	{
-		return craft()->snipcart->getCustomer($token);
+		return craft()->snipcart->getCustomer($customerId);
 	}
 	
-	public function getCustomerOrders($token)
+	public function getCustomerOrders($customerId)
 	{
-		return craft()->snipcart->getCustomerOrders($token);
+		return craft()->snipcart->getCustomerOrders($customerId);
 	}
 	
 	public function snipcartUrl()

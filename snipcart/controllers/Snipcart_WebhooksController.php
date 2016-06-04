@@ -4,7 +4,8 @@ namespace Craft;
 
 class Snipcart_WebhooksController extends BaseController
 {
-	protected $allowAnonymous = true;
+	protected $allowAnonymous  = true;
+	protected $validateWebhook = true;
 	protected $_settings;
 
 
@@ -17,6 +18,13 @@ class Snipcart_WebhooksController extends BaseController
 	public function actionHandle() 
 	{
 		$this->requirePostRequest();
+
+		if ($this->validateWebhook && ! $this->validateRequest())
+		{
+			$this->returnBadRequest(array('reason' => "Couldn't validate the webhook request. Are you sure this is Snipcart calling?"));
+			exit;
+		}
+
 		$this->_settings = craft()->plugins->getPlugin('snipcart')->getSettings();
 
 		$json = craft()->request->getRawBody();
@@ -42,7 +50,7 @@ class Snipcart_WebhooksController extends BaseController
 				$this->processOrderCompletedEvent($body);
 				break;
 			default:
-				$this->returnBadRequest(array('reason' => 'Unsupported event'));
+				$this->returnBadRequest(array('reason' => 'Unsupported event.'));
 				break;
 		}
 	}
@@ -184,4 +192,26 @@ class Snipcart_WebhooksController extends BaseController
 			$this->returnJson(array('success' => true));
 		}
 	}
+
+
+	/**
+	 * Get the token that (hopefully) came with the request,
+	 * then ask Snipcart whether it's genuine
+	 * 
+	 * @return boolean
+	 */
+
+	protected function validateRequest()
+	{
+		if ($token = craft()->request->getPost('HTTP_X_SNIPCART_REQUESTTOKEN')) 
+		{
+			$response = craft()->snipcart->validateToken($token);
+
+			if (isset($response->token) && $response->token === $token)
+				return true;
+		}
+
+		return false;
+	}
+
 }
