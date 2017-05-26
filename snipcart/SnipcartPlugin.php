@@ -11,7 +11,7 @@ class SnipcartPlugin extends BasePlugin
 
 	public function getVersion()
 	{
-		return '0.9.3';
+		return '0.9.4';
 	}
 
 	public function getDeveloper()
@@ -51,14 +51,14 @@ class SnipcartPlugin extends BasePlugin
 			'notificationEmails' => array(AttributeType::String, 'required' => true),
 		);
 	}
-	
+
 	public function getSettingsHtml()
 	{
 		return craft()->templates->render('snipcart/_settings', array(
 			'settings' => $this->getSettings()
 		));
 	}
-	
+
 	public function registerCpRoutes()
 	{
 		return array(

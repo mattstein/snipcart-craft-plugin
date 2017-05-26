@@ -30,12 +30,20 @@
 	},
 	{
 		"version": "0.9.3",
-		"downloadUrl": "https://github.com/mattstein/snipcart/archive/master.zip",
+		"downloadUrl": "https://github.com/mattstein/snipcart-craft-plugin/archive/0.9.3.zip",
 		"date": "2016-06-03T23:21:53-08:00",
 		"notes": [
 			"[added] Added webhook validation so only Snipcart is able to trigger webhooks.",
 			"[improved] Added proper pagination to order listing.",
 			"[added] New JSON release log, so you can now be annoyed by updates."
+		]
+	},
+	{
+		"version": "0.9.4",
+		"downloadUrl": "https://github.com/mattstein/snipcart-craft-plugin/archive/0.9.4.zip",
+		"date": "2017-05-25T00:00:00-08:00",
+		"notes": [
+			"[fixed] Unimplemented webhook events respond with 200 status rather than 400."
 		]
 	},
 ]
