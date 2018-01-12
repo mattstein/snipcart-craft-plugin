@@ -54,7 +54,7 @@
 				
 				<h3>Orders</h3>
 
-				<p>{{ customer.statistics.ordersCount }} order{% if customer.statistics.ordersCount != 1 %}s{% endif %}, ${{ customer.statistics.ordersAmount | number_format(2) }} spent</p>
+				<p>{{ customer.statistics.ordersCount }} order{% if customer.statistics.ordersCount != 1 %}s{% endif %}, {{ customer.statistics.ordersAmount }} spent</p>
 
 				<table class="data" style="width: 100%">
 					<thead>
@@ -72,7 +72,7 @@
 								{{ order.creationDate | date('n/j/Y') }}
 							</td>
 							<td>
-								${{ order.finalGrandTotal | number_format(2) }}
+								{{ order.finalGrandTotal | currency(order.currency|upper) }}
 							</td>
 						</tr>
 						{% endfor %}

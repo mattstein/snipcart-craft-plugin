@@ -89,7 +89,7 @@
 						<td>{{ order.creationDate | date('n/j/Y') }}</td>
 						<td>{{ order.cardHolderName }}</td>
 						<td><a href="mailto:{{ order.email }}">{{ order.email }}</a></td>
-						<td>${{ order.finalGrandTotal | number_format(2) }}</td>
+						<td>{{ order.finalGrandTotal | currency(order.currency|upper) }}</td>
 						<td>
 							{% if order.status == "Open" %}
 							<div class="status"></div>
