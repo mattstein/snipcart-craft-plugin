@@ -1,4 +1,4 @@
-<p>{{ order.cardHolderName }} ({{ order.email }}) just placed order {{ order.invoiceNumber }} for ${{ order.finalGrandTotal }}:</p>
+<p>{{ order.cardHolderName }} ({{ order.email }}) just placed order {{ order.invoiceNumber }} for {{ order.finalGrandTotal | currency(order.currency|upper) }}:</p>
 
 <hr style="height: 0; border-top: 1px solid #ddd; color: #ddd; background: #ddd;">
 
@@ -6,7 +6,7 @@
 <ul>
 {% for item in order.items %}
 	<li>
-		<span style="color: #666;">{{ item.quantity }}x</span> {{ item.name }} @ ${{ item.price }}
+		<span style="color: #666;">{{ item.quantity }}x</span> {{ item.name }} @ {{ item.price | currency(order.currency|upper) }}
 		{%- if item.customFields | length -%}
 			({% for field in item.customFields -%}
 			    {{ field.name }}: {{ field.value }}{% if loop.last != true %},{% endif %}
@@ -64,7 +64,7 @@
 
 <hr style="height: 0; border-top: 1px solid #ddd; color: #ddd; background: #ddd;">
 
-<h3>Shipping Method: {{ order.shippingMethod }} (${{ order.shippingFees }})</h3>
+<h3>Shipping Method: {{ order.shippingMethod }} ({{ order.shippingFees | currency(order.currency|upper) }})</h3>
 
 <hr style="height: 0; border-top: 1px solid #ddd; color: #ddd; background: #ddd;">
 
