@@ -46,4 +46,12 @@
 			"[fixed] Unimplemented webhook events respond with 200 status rather than 400."
 		]
 	},
+	{
+		"version": "0.9.5",
+		"downloadUrl": "https://github.com/mattstein/snipcart-craft-plugin/archive/0.9.5.zip",
+		"date": "2018-01-15T00:00:00-08:00",
+		"notes": [
+			"[improved] Support for multiple currencies courtesy of Toby Stokes."
+		]
+	},
 ]
