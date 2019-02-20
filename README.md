@@ -1,5 +1,11 @@
 # Snipcart Craft Plugin
 
+---
+
+This is a free plugin for Craft 2. The [Craft 3 version](https://github.com/workingconcept/snipcart-craft-plugin) requires a paid license and offers a lot more features.
+
+---
+
 Browse [Snipcart](https://snipcart.com/) orders, customers, and discounts from the Craft control panel. **This is a work in progress**, with discounts being completely un-tested and a rough web hook for handling quantities and emailing order notifications. It should be useful out of the box, but any improvements are welcome!
 
 ![The Craft plugin's main view.](http://files.workingconcept.com/raw/snipcart-orders-8FPa5gvpLK.png)
