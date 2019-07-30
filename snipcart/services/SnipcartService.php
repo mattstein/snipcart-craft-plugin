@@ -175,10 +175,12 @@ class SnipcartService extends BaseApplicationComponent
 		$stored    = craft()->httpSession->get('snipcartStartDate');
 		$startDate = $default;
 
-		if ($param)
-			$startDate = strtotime($param['date'])+86400;
-		else
+		if ($param) {
+			$startDate = new DateTime();
+			$startDate = strtotime($startDate->createFromString($param)->format('Y-m-d H:i:s'));
+		} else {
 			$startDate = $stored ? $stored : $default;
+	    }
 
 		craft()->httpSession->add('snipcartStartDate', $startDate);
 
@@ -193,10 +195,12 @@ class SnipcartService extends BaseApplicationComponent
 		$stored    = craft()->httpSession->get('snipcartEndDate');
 		$endDate = $default;
 
-		if ($param)
-			$endDate = strtotime($param['date'])+86400;
-		else
+		if ($param) {
+			$endDate = new DateTime();
+			$endDate = strtotime($endDate->createFromString($param)->format('Y-m-d H:i:s'));
+		} else {
 			$endDate = $stored ? $stored : $default;
+	    }
 
 		craft()->httpSession->add('snipcartEndDate', $endDate);
 
