@@ -176,7 +176,7 @@
 				</tr>
 				{% endfor %}
 				{% endif %}
-				{% if order.rebateAmount %}
+				{% if order.rebateAmount is defined %}
 				<tr>
 					<td>
 						Total Rebates
